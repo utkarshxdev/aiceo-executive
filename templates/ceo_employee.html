@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}{{ r.name }} — Performance Dossier{% endblock %}
+{% block content %}
+  <div class="page-top-lead">
+    <div class="breadcrumb-nav">
+      <a href="{{ url_for('ceo_home') }}" class="back-nav-link">&larr; Return to Audit Dashboard</a>
+      <span class="crumb-sep">/</span>
+      <span class="crumb-cur">EMPLOYEE AUDIT DOSSIER</span>
+    </div>
+
+    <div class="page-eyebrow">
+      <span class="eyebrow-tag">EXECUTIVE DOSSIER</span>
+      <span class="eyebrow-sep">/</span>
+      <span class="eyebrow-sub">EMPLOYEE PERFORMANCE AUDIT</span>
+    </div>
+
+    <div class="header-main-group">
+      <h1 class="page-main-heading">{{ r.name }} <span class="badge-chip">{{ r.id }}</span></h1>
+      <p class="page-sub-caption">Supervisor: <strong class="text-ink">{{ r.facts.manager_id }}</strong> &middot; Audit Calculation Run: <span class="mono-data">{{ r.updated }}</span></p>
+    </div>
+  </div>
+
+  <div class="glass-kpi-ribbon">
+    <div class="glass-kpi-card">
+      <div class="kpi-num-tag">01.</div>
+      <div class="kpi-title">PERFORMANCE SCORE</div>
+      <div class="kpi-number mono-data text-cobalt">{{ r.facts.performance_score }}<span class="kpi-pct">/100</span></div>
+      <div class="kpi-subtext">Composite benchmark</div>
+    </div>
+    <div class="glass-kpi-card">
+      <div class="kpi-num-tag">02.</div>
+      <div class="kpi-title">PUNCTUALITY RATE</div>
+      <div class="kpi-number mono-data text-teal">{{ r.facts.on_time_pct }}%</div>
+      <div class="kpi-subtext">On-time milestone completion</div>
+    </div>
+    <div class="glass-kpi-card">
+      <div class="kpi-num-tag">03.</div>
+      <div class="kpi-title">AWARDED MEAN SCORE</div>
+      <div class="kpi-number mono-data">{{ r.facts.avg_rating_given }} ★</div>
+      <div class="kpi-subtext">Assigned by manager {{ r.facts.manager_id }}</div>
+    </div>
+    <div class="glass-kpi-card">
+      <div class="kpi-num-tag">04.</div>
+      <div class="kpi-title">FACT EXPECTED SCORE</div>
+      <div class="kpi-number mono-data text-muted">{{ r.facts.avg_rating_expected_from_facts }} ★</div>
+      <div class="kpi-subtext">Derived from objective deliverable facts</div>
+    </div>
+    <div class="glass-kpi-card alert-card">
+      <div class="kpi-num-tag">05.</div>
+      <div class="kpi-title">OUTLIER REVIEWS</div>
+      <div class="kpi-number mono-data text-crimson">{{ r.facts.flagged_reviews }}</div>
+      <div class="kpi-subtext">Discrepancy flag count</div>
+    </div>
+  </div>
+
+  <section class="glass-panel">
+    <div class="panel-head">
+      <h3 class="panel-heading">Executive Evaluation Briefing</h3>
+      <p class="panel-sub">Objective synthesis computed from recorded review milestones and timeliness logs.</p>
+    </div>
+    <div class="frosted-briefing-sheet">
+      <pre class="briefing-preformatted-text">{{ r.text }}</pre>
+    </div>
+  </section>
+
+  <section class="glass-panel">
+    <div class="panel-head">
+      <h3 class="panel-heading">Outlier Reviews for this Employee ({{ r.flags|length }})</h3>
+      <p class="panel-sub">Specific tasks where supervisor rating diverged notably from verified deliverable parameters.</p>
+    </div>
+    {% if r.flags %}
+    <div class="glass-table-wrapper tall-scroll">
+      <table class="glass-tbl">
+        <thead>
+          <tr>
+            <th>Deliverable Title &amp; Ref</th>
+            <th>Task Parameters</th>
+            <th>Supervisor Score</th>
+            <th>Model Expected</th>
+            <th>Supervisor Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in r.flags %}
+          <tr class="row-warning">
+            <td>
+              <div class="task-cell-title">{{ f.title }}</div>
+              <span class="badge-chip">{{ f.task_id }}</span>
+            </td>
+            <td>
+              <span class="glass-tag tag-{{ f.status }}">{{ f.status|capitalize }}</span>
+              <span class="delivery-indicator {{ 'ontime' if f.delivery == 'On time' else 'late' }}">{{ f.delivery }}</span>
+            </td>
+            <td>
+              <span class="stars-gold">{{ '★' * f.rating }}<span class="stars-faint">{{ '★' * (5 - f.rating) }}</span></span>
+            </td>
+            <td><span class="mono-data text-cobalt">{{ f.expected }} ★</span></td>
+            <td class="comment-block">
+              <div class="comment-text">&ldquo;{{ f.comment or 'No comment recorded' }}&rdquo;</div>
+              <div class="comment-flag">&#9888; {{ f.reason }}</div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="glass-empty-card">
+      <div class="empty-icon-symbol">&#10003;</div>
+      <div class="empty-headline">Zero Outliers Detected</div>
+      <div class="empty-detail">All supervisor ratings for {{ r.name }} strictly correspond with verified delivery milestones.</div>
+    </div>
+    {% endif %}
+  </section>
+{% endblock %}

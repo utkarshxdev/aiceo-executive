@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Operational Reports &amp; Exports{% endblock %}
+{% block content %}
+  <div class="page-top-lead">
+    <div class="page-eyebrow">
+      <span class="eyebrow-tag">HISTORICAL AUDITS</span>
+      <span class="eyebrow-sep">/</span>
+      <span class="eyebrow-sub">OPERATIONAL REPORTS &amp; EXPORTS</span>
+    </div>
+
+    <div class="header-main-group">
+      <h1 class="page-main-heading">Operational Audits &amp; Data Exports</h1>
+      <p class="page-sub-caption">Verified historical review aggregations. Pending tasks are tallied in queues but excluded from scoring weight.</p>
+    </div>
+  </div>
+
+  <section class="glass-panel">
+    <div class="panel-head flex-between">
+      <div>
+        <h3 class="panel-heading">Monthly Trajectory Summary</h3>
+        <p class="panel-sub">Month-by-month verified task volume, approval ratios, and composite score.</p>
+      </div>
+      <a class="btn btn-cobalt-cta btn-sm" href="{{ url_for('download_monthly') }}">
+        <svg viewBox="0 0 16 16" fill="none" width="13" height="13" aria-hidden="true">
+          <path d="M8 2v9M4 8l4 4 4-4M2 14h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Download CSV</span>
+      </a>
+    </div>
+    <div class="glass-table-wrapper">
+      <table class="glass-tbl">
+        <thead>
+          <tr>
+            <th>Calendar Month</th>
+            <th>Total Tasks</th>
+            <th>Approved</th>
+            <th>Pending</th>
+            <th>Rejected</th>
+            <th>Punctuality Rate</th>
+            <th>Mean Rating</th>
+            <th>Composite Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in r.monthly %}
+          <tr>
+            <td><strong class="text-ink">{{ m.month }}</strong></td>
+            <td class="mono-data">{{ m.total }}</td>
+            <td class="mono-data text-teal">{{ m.approved }}</td>
+            <td class="mono-data text-amber">{{ m.pending }}</td>
+            <td class="mono-data text-crimson">{{ m.rejected }}</td>
+            <td class="mono-data">{{ m.on_time_pct }}%</td>
+            <td class="mono-data">{{ m.avg_rating }} ★</td>
+            <td><strong class="score-num mono-data">{{ m.score }}</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="glass-panel">
+    <div class="panel-head flex-between">
+      <div>
+        <h3 class="panel-heading">Task Completion Progress Ledger</h3>
+        <p class="panel-sub">Deliverable throughput per direct report.</p>
+      </div>
+      <a class="btn btn-cobalt-cta btn-sm" href="{{ url_for('download_completion') }}">
+        <svg viewBox="0 0 16 16" fill="none" width="13" height="13" aria-hidden="true">
+          <path d="M8 2v9M4 8l4 4 4-4M2 14h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Download CSV</span>
+      </a>
+    </div>
+    <div class="glass-table-wrapper">
+      <table class="glass-tbl">
+        <thead>
+          <tr>
+            <th>Employee Profile</th>
+            <th>Total Tasks</th>
+            <th>Approved</th>
+            <th>Pending</th>
+            <th>Rejected</th>
+            <th>Completion Progress</th>
+            <th>Punctuality</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in r.completion %}
+          <tr>
+            <td>
+              <a href="{{ url_for('manager_employee', emp_id=e.id) }}" class="emp-profile-link">
+                <span class="emp-main-name">{{ e.name }}</span>
+                <span class="emp-id-sub mono-data">{{ e.id }}</span>
+              </a>
+            </td>
+            <td class="mono-data">{{ e.total }}</td>
+            <td class="mono-data text-teal">{{ e.approved }}</td>
+            <td class="mono-data text-amber">{{ e.pending }}</td>
+            <td class="mono-data text-crimson">{{ e.rejected }}</td>
+            <td>
+              <div class="progress-bar-inline">
+                <div class="progress-track-bg"><div class="progress-bar-fill" style="width: {{ e.completion_pct }}%"></div></div>
+                <span class="mono-data">{{ e.completion_pct }}%</span>
+              </div>
+            </td>
+            <td class="mono-data">{{ e.on_time_pct }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="glass-panel">
+    <div class="panel-head">
+      <h3 class="panel-heading">Individual Contributor Performance Index</h3>
+      <p class="panel-sub">Verified score, quality rating, and rejection counts.</p>
+    </div>
+    <div class="glass-table-wrapper">
+      <table class="glass-tbl">
+        <thead>
+          <tr>
+            <th>Employee Profile</th>
+            <th>Composite Score</th>
+            <th>Mean Rating</th>
+            <th>On-Time Rate</th>
+            <th>Approval Rate</th>
+            <th>Rejected Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in r.performance %}
+          <tr>
+            <td>
+              <a href="{{ url_for('manager_employee', emp_id=e.id) }}" class="emp-profile-link">
+                <span class="emp-main-name">{{ e.name }}</span>
+                <span class="emp-id-sub mono-data">{{ e.id }}</span>
+              </a>
+            </td>
+            <td><strong class="score-num mono-data">{{ e.score }}</strong></td>
+            <td class="mono-data">{{ e.avg_rating }} ★</td>
+            <td class="mono-data">{{ e.on_time_pct }}%</td>
+            <td class="mono-data">{{ e.completion_pct }}%</td>
+            <td class="mono-data text-crimson">{{ e.rejected }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

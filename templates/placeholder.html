@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+  <h1>{{ title }}</h1>
+  <p class="lead">Welcome, {{ session['name'] }}. The database detected your role as
+     <strong>{{ session['role'] }}</strong>.</p>
+  <div class="coming">{{ coming }}</div>
+{% endblock %}

@@ -1,0 +1,106 @@
+{
+  "generated_at": "02 Nov 2026, 21:31",
+  "versions": {
+    "python": "3.11.14",
+    "scikit_learn": "1.9.1"
+  },
+  "files": {
+    "rating_model.pkl": "02 Nov 2026, 21:31",
+    "anomaly_model.pkl": "02 Nov 2026, 21:31"
+  },
+  "dataset": {
+    "file": "tasks_data.csv",
+    "rows": 10000,
+    "employees": 100,
+    "managers": 10,
+    "date_from": "01 Jan 2026",
+    "date_to": "17 Oct 2026",
+    "suspicious_reviews": 986,
+    "suspicious_pct": 9.9,
+    "avg_rating": 3.28,
+    "status_counts": {
+      "approved": 7887,
+      "rejected": 1711,
+      "pending": 402
+    },
+    "note": "Synthetic (generated) data with deliberately planted bad reviews, used to train and check the models."
+  },
+  "model1": {
+    "algorithm": "Weighted scoring formula (no training needed)",
+    "weights": {
+      "On-time completion": 35,
+      "Approval rate": 25,
+      "Average rating": 25,
+      "Low rejection rate": 15
+    }
+  },
+  "model2": {
+    "algorithm": "Random Forest Regressor",
+    "trees": 200,
+    "min_samples_leaf": 20,
+    "features": [
+      "days_late",
+      "late_days_only",
+      "is_late",
+      "status_approved",
+      "status_rejected",
+      "status_pending"
+    ],
+    "train_rows": 8000,
+    "test_rows": 2000,
+    "noisy_rows_removed": 547,
+    "mae": 0.83,
+    "flag_threshold": 2.1,
+    "precision": 94.3,
+    "recall": 58.1,
+    "f1": 71.9,
+    "flagged_in_test": 122,
+    "caught": 115,
+    "suspicious_in_test": 198,
+    "importance": {
+      "status_rejected": 0.3575,
+      "days_late": 0.3378,
+      "late_days_only": 0.2994,
+      "is_late": 0.0042,
+      "status_approved": 0.0005,
+      "status_pending": 0.0005
+    }
+  },
+  "model3": {
+    "algorithm": "Z-score (managers) + Isolation Forest (employees)",
+    "trees": 300,
+    "contamination": 0.08,
+    "z_limit": 2.0,
+    "managers_checked": 10,
+    "employees_checked": 100,
+    "flagged_managers": [
+      "M03"
+    ],
+    "flagged_employees": [
+      "E006",
+      "E022",
+      "E023",
+      "E026",
+      "E027",
+      "E028",
+      "E029",
+      "E065"
+    ],
+    "planted_lazy_manager": "M03",
+    "planted_biased_employee": "E065",
+    "lazy_manager_found": true,
+    "biased_employee_found": true
+  },
+  "model4": {
+    "algorithm": "VADER sentiment (pre-trained) + workplace phrase rules",
+    "accuracy_normal": 100.0,
+    "mismatches": 230,
+    "suspicious_caught": 230,
+    "suspicious_total": 986,
+    "note": "Comments in the sample data come from fixed templates, so real-world accuracy will be lower."
+  },
+  "model5": {
+    "algorithm": "Report writer (rule-based; optional Claude API)",
+    "note": "Turns the other models' results into plain-English reports."
+  }
+}

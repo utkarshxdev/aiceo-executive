@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.git/
+.DS_Store
+*.log
+model_backups/
+setup_demo.py
+init_db.py
+generate_data.py
+load_tasks.py
+train_model2.py
+train_model3.py
+generate_all_reports.py
+evaluate_models.py
+*.md

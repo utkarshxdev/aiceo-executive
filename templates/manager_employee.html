@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% block title %}{{ emp.name }} — Task Ledger{% endblock %}
+{% block content %}
+  <div class="page-top-lead">
+    <div class="breadcrumb-nav">
+      <a href="{{ url_for('manager_tasks') }}" class="back-nav-link">&larr; Return to Team Queue</a>
+      <span class="crumb-sep">/</span>
+      <span class="crumb-cur">EMPLOYEE AUDIT DOSSIER</span>
+    </div>
+    
+    <div class="page-eyebrow">
+      <span class="eyebrow-tag">MEMBER DOSSIER</span>
+      <span class="eyebrow-sep">/</span>
+      <span class="eyebrow-sub">TASK &amp; RATING LEDGER</span>
+    </div>
+
+    <div class="header-main-group flex-between">
+      <div>
+        <h1 class="page-main-heading">{{ emp.name }} <span class="badge-chip">{{ emp.id }}</span></h1>
+        <p class="page-sub-caption">Performance Index: <strong class="text-cobalt mono-data">{{ emp.score }}/100</strong> &middot; Punctuality: <span class="mono-data">{{ emp.on_time_pct }}%</span> &middot; Quality Average: <span class="mono-data">{{ emp.avg_rating }} ★</span></p>
+      </div>
+      <button type="button" class="btn btn-cobalt-cta" id="openUpload">
+        <svg viewBox="0 0 16 16" fill="none" width="14" height="14" aria-hidden="true">
+          <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span>Upload Deliverable</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="glass-kpi-ribbon">
+    <div class="glass-kpi-card">
+      <div class="kpi-num-tag">01.</div>
+      <div class="kpi-title">TOTAL DELIVERABLES</div>
+      <div class="kpi-number mono-data">{{ emp.total }}</div>
+      <div class="kpi-subtext">All assigned tasks</div>
+    </div>
+    <div class="glass-kpi-card">
+      <div class="kpi-num-tag">02.</div>
+      <div class="kpi-title">APPROVED</div>
+      <div class="kpi-number mono-data text-teal">{{ emp.approved }}</div>
+      <div class="kpi-subtext">Verified quality delivery</div>
+    </div>
+    <div class="glass-kpi-card alert-card">
+      <div class="kpi-num-tag">03.</div>
+      <div class="kpi-title">AWAITING REVIEW</div>
+      <div class="kpi-number mono-data text-amber">{{ emp.pending }}</div>
+      <div class="kpi-subtext">Pending supervisor review</div>
+    </div>
+    <div class="glass-kpi-card critical-card">
+      <div class="kpi-num-tag">04.</div>
+      <div class="kpi-title">REJECTED</div>
+      <div class="kpi-number mono-data text-crimson">{{ emp.rejected }}</div>
+      <div class="kpi-subtext">Quality criteria not met</div>
+    </div>
+  </div>
+
+  <div class="filter-strip">
+    <div class="chips-container" id="chips">
+      <button class="glass-chip" data-f="all">All Deliverables</button>
+      <button class="glass-chip" data-f="pending">Pending Audit ({{ emp.pending }})</button>
+      <button class="glass-chip" data-f="approved">Approved</button>
+      <button class="glass-chip" data-f="rejected">Rejected</button>
+    </div>
+  </div>
+
+  <div class="glass-panel">
+    <div class="glass-table-wrapper">
+      <table class="glass-tbl" id="tbl">
+        <thead>
+          <tr>
+            <th>Deliverable Reference</th>
+            <th>Target Deadline</th>
+            <th>Finished Date</th>
+            <th>Punctuality</th>
+            <th>Review Status</th>
+            <th>Awarded Score</th>
+            <th>Supervisor Remarks</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in tasks %}
+          <tr data-status="{{ t.status }}">
+            <td>
+              <div class="task-cell-title">{{ t.title }}</div>
+              <span class="badge-chip">{{ t.task_id }}</span>
+            </td>
+            <td class="mono-data">{{ t.deadline }}</td>
+            <td class="mono-data">{{ t.finished }}</td>
+            <td>
+              <span class="delivery-indicator {{ 'late' if t.late else 'ontime' }}">{{ t.delivery }}</span>
+            </td>
+            <td>
+              <span class="glass-tag tag-{{ t.status }}">{{ t.status|capitalize }}</span>
+            </td>
+            <td>
+              {% if t.rating %}
+              <span class="stars-gold">{{ '★' * t.rating }}<span class="stars-faint">{{ '★' * (5 - t.rating) }}</span></span>
+              {% else %}
+              <span class="text-tertiary">Unrated</span>
+              {% endif %}
+            </td>
+            <td class="comment-block">
+              {% if t.comment %}
+              <div class="comment-text">&ldquo;{{ t.comment }}&rdquo;</div>
+              {% else %}
+              <span class="text-tertiary">—</span>
+              {% endif %}
+            </td>
+            <td class="text-right">
+              <button type="button" class="btn btn-sm {{ 'btn-cobalt-cta' if t.pending else 'btn-glass-subtle' }}"
+                      data-action="{{ url_for('review_task', task_id=t.task_id) }}"
+                      data-task="{{ t.task_id }}" data-title="{{ t.title }}"
+                      data-rating="{{ t.rating or '' }}" data-comment="{{ t.comment }}"
+                      data-status="{{ t.status }}">{{ 'Review' if t.pending else 'Edit' }}</button>
+              {% if t.pending %}
+              <form method="post" action="{{ url_for('manager_delete_task', task_id=t.task_id) }}" class="inline-form"
+                    onsubmit="return confirm('Delete this unreviewed task permanently?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="f" class="fField2" value="all">
+                <button type="submit" class="btn btn-sm btn-glass-danger" title="Delete deliverable">Delete</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <dialog id="uploadDialog" class="frosted-dialog">
+    <div class="dialog-glass-container">
+      <form method="post" action="{{ url_for('manager_new_task', emp_id=emp.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="dialog-header-bar">
+          <div>
+            <div class="dialog-main-title">Log New Deliverable</div>
+            <div class="dialog-sub-title">For team member: {{ emp.name }} ({{ emp.id }})</div>
+          </div>
+          <button type="button" class="dialog-dismiss-btn" id="uClose" aria-label="Close dialog">&times;</button>
+        </div>
+
+        <div class="dialog-form-fields">
+          <div class="dialog-field">
+            <label class="field-label" for="uTitle">Deliverable Title</label>
+            <input type="text" id="uTitle" name="title" maxlength="100" placeholder="e.g. Q3 Strategic Financial Plan" class="glass-input" required>
+          </div>
+
+          <div class="dialog-field">
+            <label class="field-label" for="uDesc">Description (Optional)</label>
+            <textarea name="description" id="uDesc" maxlength="500" rows="3" placeholder="Core deliverables and milestone criteria" class="glass-textarea"></textarea>
+          </div>
+
+          <div class="dialog-form-row">
+            <div class="dialog-field">
+              <label class="field-label" for="uDeadline">Target Deadline</label>
+              <input type="date" id="uDeadline" name="deadline" value="{{ today }}" class="glass-input" required>
+            </div>
+            <div class="dialog-field">
+              <label class="field-label" for="uDone">Submission Date</label>
+              <input type="date" id="uDone" name="completed_date" value="{{ today }}" max="{{ today }}" class="glass-input" required>
+            </div>
+          </div>
+          <p class="dialog-note">Task is initially logged as pending. Rate and review it afterwards to complete evaluation.</p>
+        </div>
+
+        <div class="dialog-footer-actions">
+          <button type="button" class="btn btn-glass-subtle" id="uCancel">Cancel</button>
+          <button type="submit" class="btn btn-cobalt-cta">Save Deliverable</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog id="reviewDialog" class="frosted-dialog">
+    <div class="dialog-glass-container">
+      <form method="post" id="reviewForm" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="f" id="fField" value="all">
+        <div class="dialog-header-bar">
+          <div>
+            <div class="dialog-main-title" id="dTitle">Review Deliverable</div>
+            <div class="dialog-sub-title mono-data" id="dSub"></div>
+          </div>
+          <button type="button" class="dialog-dismiss-btn" id="dClose" aria-label="Close dialog">&times;</button>
+        </div>
+
+        <div class="dialog-form-fields">
+          <div class="dialog-field">
+            <label class="field-label">Quality Score (1–5 Stars)</label>
+            <div class="rating-choice-strip" id="ratingPick">
+              {% for n in range(1, 6) %}
+              <input type="radio" name="rating" id="r{{ n }}" value="{{ n }}">
+              <label for="r{{ n }}">{{ n }} ★</label>
+              {% endfor %}
+            </div>
+            <div class="rating-scale-legend">
+              <span>1 = Substandard</span>
+              <span>3 = Expected Benchmark</span>
+              <span>5 = Exceptional</span>
+            </div>
+          </div>
+
+          <div class="dialog-field">
+            <label class="field-label" for="dComment">Qualitative Evaluation Remarks</label>
+            <textarea name="comment" id="dComment" maxlength="500" rows="3" placeholder="Provide constructive feedback and justification for score" class="glass-textarea"></textarea>
+          </div>
+
+          <div class="dialog-alert-error" id="dError" hidden>Please select a 1–5 star rating prior to approval or rejection.</div>
+        </div>
+
+        <div class="dialog-footer-actions">
+          <button type="submit" name="status" value="approved" class="btn btn-teal-cta">Approve Deliverable</button>
+          <button type="submit" name="status" value="rejected" class="btn btn-glass-danger">Reject</button>
+          <button type="submit" name="status" value="pending" class="btn btn-glass-subtle">Keep Pending</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+{% endblock %}
+{% block scripts %}
+<script>
+  const chips = document.querySelectorAll('.glass-chip');
+  const rows = document.querySelectorAll('#tbl tbody tr');
+  const fField = document.getElementById('fField');
+  function applyFilter(f) {
+    chips.forEach(c => c.classList.toggle('on', c.dataset.f === f));
+    rows.forEach(r => { r.style.display = (f === 'all' || r.dataset.status === f) ? '' : 'none'; });
+    fField.value = f;
+    document.querySelectorAll('.fField2').forEach(i => i.value = f);
+  }
+  chips.forEach(c => c.addEventListener('click', () => applyFilter(c.dataset.f)));
+  applyFilter({{ start_filter|tojson }});
+
+  const upDlg = document.getElementById('uploadDialog');
+  document.getElementById('openUpload').addEventListener('click', () => upDlg.showModal());
+  document.getElementById('uClose').addEventListener('click', () => upDlg.close());
+  document.getElementById('uCancel').addEventListener('click', () => upDlg.close());
+  upDlg.addEventListener('click', e => { if (e.target === upDlg) upDlg.close(); });
+
+  const dlg = document.getElementById('reviewDialog');
+  const form = document.getElementById('reviewForm');
+  const err = document.getElementById('dError');
+  document.querySelectorAll('.btn[data-action]').forEach(b => b.addEventListener('click', () => {
+    const d = b.dataset;
+    form.action = d.action;
+    document.getElementById('dTitle').textContent = d.title;
+    document.getElementById('dSub').textContent = d.task;
+    document.getElementById('dComment').value = d.comment;
+    form.querySelectorAll('input[name=rating]').forEach(r => { r.checked = (r.value === d.rating); });
+    err.hidden = true;
+    dlg.showModal();
+  }));
+  document.getElementById('dClose').addEventListener('click', () => dlg.close());
+  dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+  form.addEventListener('submit', e => {
+    const chosen = form.querySelector('input[name=rating]:checked');
+    if (e.submitter && e.submitter.value !== 'pending' && !chosen) {
+      e.preventDefault();
+      err.hidden = false;
+    }
+  });
+</script>
+{% endblock %}

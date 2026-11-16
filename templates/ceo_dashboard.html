@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+{% block title %}Executive Performance Audit{% endblock %}
+{% block content %}
+  <div class="page-top-lead">
+    <div class="page-eyebrow">
+      <span class="eyebrow-tag">EXECUTIVE SUITE</span>
+      <span class="eyebrow-sep">/</span>
+      <span class="eyebrow-sub">AUDIT &amp; GOVERNANCE LEDGER</span>
+    </div>
+
+    <div class="header-main-group flex-between">
+      <div>
+        <h1 class="page-main-heading">Performance Audit &amp; Governance Ledger</h1>
+        <p class="page-sub-caption">Objective milestones cross-referenced against recorded manager ratings. Last audit calculation: <strong class="text-ink">{{ d.updated }}</strong></p>
+      </div>
+      <form method="post" action="{{ url_for('ceo_rerun') }}" class="header-cta-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-cobalt-cta" type="submit">
+          <svg viewBox="0 0 16 16" fill="none" width="13" height="13" aria-hidden="true">
+            <path d="M14 8A6 6 0 118 2v2a4 4 0 104 4h2z" fill="currentColor"/>
+          </svg>
+          <span>Re-run Audit Pipeline</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="glass-provenance-box">
+    <div class="provenance-indicator">01.</div>
+    <div class="provenance-body">
+      <div class="provenance-tag">DATA SOURCES &amp; VERIFICATION LOGIC</div>
+      <div class="provenance-text">
+        Audit computed from <strong>{{ "{:,}".format(d.kpi.reviewed) }}</strong> completed reviews in database (<strong>{{ d.kpi.pending }}</strong> pending unreviewed), benchmarked against objective deliverable facts (timeliness, milestone specifications, and approval states).
+        <a href="{{ url_for('ceo_models') }}" class="provenance-link">Inspect Scoring Models &amp; Evidence &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass-kpi-ribbon">
+    <div class="glass-kpi-card">
+      <div class="kpi-num-tag">01.</div>
+      <div class="kpi-title">TOTAL EMPLOYEES</div>
+      <div class="kpi-number mono-data">{{ d.kpi.employees }}</div>
+      <div class="kpi-subtext">Active direct reports</div>
+    </div>
+    <div class="glass-kpi-card">
+      <div class="kpi-num-tag">02.</div>
+      <div class="kpi-title">AUDITED REVIEWS</div>
+      <div class="kpi-number mono-data">{{ "{:,}".format(d.kpi.reviewed) }}</div>
+      <div class="kpi-subtext">Verified supervisor evaluations</div>
+    </div>
+    <div class="glass-kpi-card alert-card">
+      <div class="kpi-num-tag">03.</div>
+      <div class="kpi-title">SCORE OUTLIERS</div>
+      <div class="kpi-number mono-data text-crimson">{{ d.kpi.flagged }} <span class="kpi-pct">({{ d.kpi.flagged_pct }}%)</span></div>
+      <div class="kpi-subtext">Rating diverges from task facts</div>
+    </div>
+    <div class="glass-kpi-card warn-card">
+      <div class="kpi-num-tag">04.</div>
+      <div class="kpi-title">TONE INCOHERENCE</div>
+      <div class="kpi-number mono-data text-amber">{{ d.kpi.mismatches }}</div>
+      <div class="kpi-subtext">Comment tone opposes rating</div>
+    </div>
+    <div class="glass-kpi-card critical-card">
+      <div class="kpi-num-tag">05.</div>
+      <div class="kpi-title">SUPERVISOR SKEW</div>
+      <div class="kpi-number mono-data text-crimson">{{ d.kpi.managers_flagged }}</div>
+      <div class="kpi-subtext">Managers with skewed distributions</div>
+    </div>
+  </div>
+
+  <div class="glass-panel-split">
+    <section class="glass-panel">
+      <div class="panel-head">
+        <h3 class="panel-heading">Supervisor Rating Audit (Mean Gap)</h3>
+        <p class="panel-sub">Variance between manager-awarded score and fact-based expectation. Above zero indicates leniency; below zero indicates strictness.</p>
+      </div>
+      <div class="chart-canvas-wrap"><canvas id="cMgr"></canvas></div>
+    </section>
+
+    <section class="glass-panel">
+      <div class="panel-head">
+        <h3 class="panel-heading">Supervisor Registry</h3>
+        <p class="panel-sub">Average awarded scores, five-star ratios, and statistical pattern check.</p>
+      </div>
+      <div class="glass-table-wrapper">
+        <table class="glass-tbl">
+          <thead>
+            <tr>
+              <th>Manager ID</th>
+              <th>Avg Rating</th>
+              <th>5-Star Rate</th>
+              <th>Pattern Audit</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in d.managers|sort(attribute='z', reverse=True) %}
+            <tr class="{{ 'row-flagged' if m.flagged }}">
+              <td><span class="badge-chip">{{ m.id }}</span></td>
+              <td class="mono-data">{{ m.avg_rating }}</td>
+              <td class="mono-data">{{ m.pct_five_star }}%</td>
+              <td>
+                {% if m.flagged %}
+                <span class="glass-status status-bad" title="{{ m.why }}">
+                  <span class="pip pip-ruby"></span> Unusual Skew
+                </span>
+                {% else %}
+                <span class="glass-status status-ok">
+                  <span class="pip pip-teal"></span> Consistent
+                </span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% for m in d.managers if m.flagged %}
+      <div class="flagged-callout-strip">
+        <span class="callout-symbol">&#9873;</span>
+        <span><strong>{{ m.id }}:</strong> {{ m.why }} (Statistical Z-Score: {{ m.z }}).</span>
+      </div>
+      {% endfor %}
+    </section>
+  </div>
+
+  <section class="glass-panel">
+    <div class="panel-head">
+      <h3 class="panel-heading">Employee Performance Ledger</h3>
+      <p class="panel-sub">Ranked by weighted composite score. Click any team member to inspect their complete audit dossier.</p>
+    </div>
+    <div class="glass-table-wrapper tall-scroll">
+      <table class="glass-tbl">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Employee</th>
+            <th>Supervisor</th>
+            <th>Composite Score</th>
+            <th>Avg Rating</th>
+            <th>Model Expected</th>
+            <th>Outliers</th>
+            <th>Audit Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in d.employees %}
+          <tr>
+            <td><span class="rank-tag rank-{{ loop.index if loop.index <= 3 else 'other' }}">{{ loop.index }}</span></td>
+            <td>
+              <a href="{{ url_for('ceo_employee', emp_id=e.id) }}" class="emp-profile-link">
+                <span class="emp-main-name">{{ e.name }}</span>
+                <span class="emp-id-sub mono-data">{{ e.id }}</span>
+              </a>
+            </td>
+            <td><span class="badge-chip">{{ e.manager_id }}</span></td>
+            <td><strong class="score-num mono-data">{{ e.score }}</strong></td>
+            <td class="mono-data">{{ e.avg_rating }}</td>
+            <td class="mono-data text-muted">{{ e.expected }}</td>
+            <td>
+              {% if e.flagged %}
+              <span class="glass-outlier-tag">&#9873; {{ e.flagged }}</span>
+              {% else %}
+              <span class="text-tertiary">0</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if e.anomaly %}
+              <span class="glass-status status-bad">
+                <span class="pip pip-ruby"></span> {{ e.status }}
+              </span>
+              {% else %}
+              <span class="glass-status status-ok">
+                <span class="pip pip-teal"></span> Standard
+              </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="glass-panel">
+    <div class="panel-head">
+      <h3 class="panel-heading">Review Discrepancies Requiring Executive Notice</h3>
+      <p class="panel-sub">Showing top {{ d.flagged_reviews|length }} reviews where manager scoring diverged significantly from deliverable facts. People make final decisions.</p>
+    </div>
+    <div class="glass-table-wrapper tall-scroll">
+      <table class="glass-tbl">
+        <thead>
+          <tr>
+            <th>Task &amp; Reference</th>
+            <th>Employee</th>
+            <th>Supervisor</th>
+            <th>Task Parameters</th>
+            <th>Awarded</th>
+            <th>Expected</th>
+            <th>Manager Qualitative Feedback</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in d.flagged_reviews %}
+          <tr class="row-warning">
+            <td>
+              <div class="task-cell-title">{{ f.title }}</div>
+              <span class="badge-chip">{{ f.task_id }}</span>
+            </td>
+            <td>
+              <a href="{{ url_for('ceo_employee', emp_id=f.employee_id) }}" class="emp-profile-link">
+                {{ f.employee }}
+              </a>
+            </td>
+            <td><span class="badge-chip">{{ f.manager_id }}</span></td>
+            <td>
+              <span class="glass-tag tag-{{ f.status }}">{{ f.status|capitalize }}</span>
+              <span class="delivery-indicator {{ 'ontime' if f.delivery == 'On time' else 'late' }}">{{ f.delivery }}</span>
+            </td>
+            <td>
+              <span class="stars-gold">{{ '★' * f.rating }}<span class="stars-faint">{{ '★' * (5 - f.rating) }}</span></span>
+            </td>
+            <td><span class="mono-data text-cobalt">{{ f.expected }}</span></td>
+            <td class="comment-block">
+              <div class="comment-text">&ldquo;{{ f.comment or 'No comment provided' }}&rdquo;</div>
+              <div class="comment-flag">&#9888; {{ f.reason }}</div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+  const M = {{ d.managers|tojson }};
+  if (typeof Chart === 'undefined') {
+    document.querySelector('.chart-canvas-wrap').innerHTML = '<p class="text-tertiary">Chart component requires network access.</p>';
+  } else {
+    Chart.defaults.font.family = '"Plus Jakarta Sans", system-ui, sans-serif';
+    Chart.defaults.font.size = 11;
+    Chart.defaults.color = '#4a4e69';
+    Chart.defaults.maintainAspectRatio = false;
+    
+    new Chart(document.getElementById('cMgr'), {
+      type: 'bar',
+      data: {
+        labels: M.map(m => m.id),
+        datasets: [{
+          label: 'Observed Gap (Manager minus Expected)',
+          data: M.map(m => m.mean_gap),
+          backgroundColor: M.map(m => m.flagged ? '#e11d48' : '#1800ad'),
+          borderRadius: 4,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(12, 14, 36, 0.92)',
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+            borderWidth: 1,
+            titleColor: '#ffffff',
+            bodyColor: '#e2e8f0',
+            padding: 10,
+            cornerRadius: 6,
+            displayColors: false
+          }
+        },
+        scales: {
+          y: {
+            grid: { color: 'rgba(24, 0, 173, 0.06)', drawBorder: false },
+            ticks: { color: '#595e78' }
+          },
+          x: {
+            grid: { display: false, drawBorder: false },
+            ticks: { color: '#1800ad', font: { weight: '600' } }
+          }
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}

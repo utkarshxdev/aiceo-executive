@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign In — AI CEO Executive Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=glass5">
+</head>
+<body class="login-body-stage">
+  <!-- Multi-layer ambient luminous orbs for rich optical refraction -->
+  <div class="ambient-glow glow-top" aria-hidden="true"></div>
+  <div class="ambient-glow glow-mid" aria-hidden="true"></div>
+  <div class="ambient-glow glow-bottom" aria-hidden="true"></div>
+
+  <main class="portal-stage-wrapper">
+    <!-- Left Hero Editorial Showcase -->
+    <div class="portal-hero-pane">
+      <div class="brand-monogram-row">
+        <div class="brand-cobalt-box-lg">
+          <svg viewBox="0 0 24 24" fill="none" width="22" height="22" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" stroke-width="2"/>
+            <path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="brand-identity-text">
+          <span class="brand-title">AI CEO</span>
+          <span class="brand-version-tag">SYSTEM v2.4</span>
+        </div>
+      </div>
+
+      <div class="portal-lead-content">
+        <div class="portal-eyebrow">EXECUTIVE PERFORMANCE AUDIT &amp; GOVERNANCE</div>
+        <h1 class="portal-hero-heading">Unbiased Deliverable Audits.<br>Grounded in Facts.</h1>
+        <p class="portal-hero-description">
+          Cross-referencing objective delivery latency against manager ratings across 10,001 tasks.
+          Detecting systematic evaluation bias with deterministic multi-model machine learning.
+        </p>
+      </div>
+
+      <!-- Micro Model Telemetry Highlights -->
+      <div class="portal-telemetry-strip">
+        <div class="telemetry-item">
+          <span class="telemetry-num">01.</span>
+          <div class="telemetry-info">
+            <span class="telemetry-label">Random Forest Regressor</span>
+            <span class="telemetry-val">MAE 0.38 ★ &middot; 200 Trees</span>
+          </div>
+        </div>
+        <div class="telemetry-item">
+          <span class="telemetry-num">02.</span>
+          <div class="telemetry-info">
+            <span class="telemetry-label">Isolation Forest</span>
+            <span class="telemetry-val">8% Contamination &middot; Outliers Flagged</span>
+          </div>
+        </div>
+        <div class="telemetry-item">
+          <span class="telemetry-num">03.</span>
+          <div class="telemetry-info">
+            <span class="telemetry-label">NLP Tone Coherence</span>
+            <span class="telemetry-val">98.4% Normal Accuracy</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="portal-assurance-footer">
+        <span class="assurance-pip"></span>
+        <span>Human-in-the-Loop Protocol &middot; Cryptographic PBKDF2 Auth &middot; People Make Final Decisions</span>
+      </div>
+    </div>
+
+    <!-- Right Frosted Glass Authentication Terminal -->
+    <div class="portal-form-pane">
+      <div class="login-card-inner">
+        <div class="login-card-head">
+          <div class="terminal-badge">AUTHENTICATION PORTAL</div>
+          <h2 class="terminal-title">Executive Sign In</h2>
+          <p class="terminal-subtitle">Access executive consoles, task queues, or employee dossiers.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for category, message in messages %}
+            <div class="glass-alert glass-alert-{{ category }}" role="alert">{{ message }}</div>
+          {% endfor %}
+        {% endwith %}
+
+        {% if show_demo %}
+        <div class="role-selector-section">
+          <div class="role-selector-header">SELECT 1-CLICK ROLE PRESET</div>
+          <div class="role-presets-grid">
+            <button type="button" class="preset-pill active" id="btnCeo" onclick="fillCreds('ceo@aiceo.com', 'ceo123', this)">
+              <span class="step-num">01.</span>
+              <span class="step-label">CEO</span>
+            </button>
+            <button type="button" class="preset-pill" id="btnMgr" onclick="fillCreds('manager1@aiceo.com', 'manager123', this)">
+              <span class="step-num">02.</span>
+              <span class="step-label">Manager</span>
+            </button>
+            <button type="button" class="preset-pill" id="btnEmp" onclick="fillCreds('emp001@aiceo.com', 'employee123', this)">
+              <span class="step-num">03.</span>
+              <span class="step-label">Employee</span>
+            </button>
+          </div>
+        </div>
+        {% endif %}
+
+        <form method="post" action="{{ url_for('login') }}" class="portal-form" novalidate>
+          <div class="field-container">
+            <label for="email" class="field-label">Executive ID / Work Email</label>
+            <input type="email" id="email" name="email" value="{{ email or 'ceo@aiceo.com' }}"
+                   placeholder="name@aiceo.com" autocomplete="username" class="glass-input" required autofocus spellcheck="false">
+          </div>
+
+          <div class="field-container">
+            <label for="password" class="field-label">Password</label>
+            <div class="input-pw-wrap">
+              <input type="password" id="password" name="password" value="ceo123"
+                     placeholder="••••••••••••" autocomplete="current-password" class="glass-input" required>
+              <button type="button" class="pw-toggle-btn" id="toggle" aria-label="Show password">Show</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-cobalt-cta btn-block">
+            <span>Authenticate &amp; Enter Console</span>
+            <svg viewBox="0 0 20 20" fill="none" width="16" height="16" aria-hidden="true">
+              <path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </form>
+
+        <div class="portal-footer-status">
+          <div class="status-badge-inline">
+            <span class="status-pip"></span>
+            <span>10,001 Tasks Loaded &middot; Ready for Inspection</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const pw = document.getElementById('password');
+    const emailField = document.getElementById('email');
+    const btn = document.getElementById('toggle');
+    
+    btn.addEventListener('click', () => {
+      const isHidden = pw.type === 'password';
+      pw.type = isHidden ? 'text' : 'password';
+      btn.textContent = isHidden ? 'Hide' : 'Show';
+      btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    });
+
+    function fillCreds(u, p, el) {
+      emailField.value = u;
+      pw.value = p;
+      document.querySelectorAll('.preset-pill').forEach(b => b.classList.remove('active'));
+      if (el) el.classList.add('active');
+    }
+  </script>
+</body>
+</html>

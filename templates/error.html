@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} — AI CEO</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Space+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=glass5">
+</head>
+<body class="login-body-stage">
+  <div class="ambient-glow glow-top" aria-hidden="true"></div>
+  <main class="glass-login-container">
+    <div class="page-eyebrow" style="margin-bottom: 16px;">
+      <span class="eyebrow-tag">DIAGNOSTIC PROTOCOL</span>
+      <span class="eyebrow-sep">/</span>
+      <span class="eyebrow-sub">SYSTEM NOTICE</span>
+    </div>
+    <div class="login-card-inner text-center">
+      <div class="error-status-num">{{ code }}</div>
+      <h1 class="portal-main-title" style="margin-top:10px">{{ title }}</h1>
+      <p class="portal-sub-title" style="margin-top:6px">{{ message }}</p>
+      <div style="margin-top:24px">
+        <a class="btn btn-cobalt-cta" href="{{ url_for('login') }}">Return to Console</a>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

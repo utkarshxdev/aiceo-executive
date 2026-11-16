@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Team Review Queues{% endblock %}
+{% block content %}
+  <div class="page-top-lead">
+    <div class="page-eyebrow">
+      <span class="eyebrow-tag">WORKFLOW QUEUES</span>
+      <span class="eyebrow-sep">/</span>
+      <span class="eyebrow-sub">DIRECT REPORT TASK LEDGERS</span>
+    </div>
+
+    <div class="header-main-group">
+      <h1 class="page-main-heading">Direct Report Task Ledgers</h1>
+      <p class="page-sub-caption">Select an employee profile to inspect completed deliverables, assign 1–5 star evaluations, and log approvals.</p>
+    </div>
+  </div>
+
+  <div class="glass-emp-grid">
+    {% for e in employees %}
+    <a class="glass-emp-card" href="{{ url_for('manager_employee', emp_id=e.id) }}">
+      <div class="emp-top-section">
+        <span class="emp-avatar-box">{{ e.id }}</span>
+        <div class="emp-profile-meta">
+          <div class="emp-profile-name">{{ e.name }}</div>
+          <div class="emp-task-tally mono-data">{{ e.total }} recorded tasks</div>
+        </div>
+        {% if e.pending %}
+        <span class="glass-status status-warn">
+          <span class="pip pip-amber"></span> {{ e.pending }} to review
+        </span>
+        {% endif %}
+      </div>
+
+      <div class="segmented-progress-track" title="Approved / Pending / Rejected">
+        <span class="progress-seg seg-ok" style="width: {{ (e.approved / e.total * 100) if e.total else 0 }}%"></span>
+        <span class="progress-seg seg-wait" style="width: {{ (e.pending / e.total * 100) if e.total else 0 }}%"></span>
+        <span class="progress-seg seg-bad" style="width: {{ (e.rejected / e.total * 100) if e.total else 0 }}%"></span>
+      </div>
+
+      <div class="emp-task-counts">
+        <span class="count-tag"><span class="dot ok"></span> {{ e.approved }} Approved</span>
+        <span class="count-tag"><span class="dot wait"></span> {{ e.pending }} Pending</span>
+        <span class="count-tag"><span class="dot bad"></span> {{ e.rejected }} Rejected</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+{% endblock %}

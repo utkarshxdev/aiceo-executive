@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+{% block title %}Scoring Methodology &amp; Proof{% endblock %}
+{% block content %}
+  <div class="page-top-lead">
+    <div class="page-eyebrow">
+      <span class="eyebrow-tag">MATHEMATICAL BENCHMARK</span>
+      <span class="eyebrow-sep">/</span>
+      <span class="eyebrow-sub">SCORING METHODOLOGY &amp; PROOF</span>
+    </div>
+
+    <div class="header-main-group">
+      <h1 class="page-main-heading">Scoring Methodology &amp; Audit Verification</h1>
+      <p class="page-sub-caption">Mathematical proof, model hyperparameters, training error benchmarks, and feature importance weighting.</p>
+    </div>
+  </div>
+
+  {% if not m %}
+    <div class="glass-empty-card">
+      <div class="empty-icon-symbol">&#9888;</div>
+      <div class="empty-headline">Evaluation Benchmark Not Yet Compiled</div>
+      <div class="empty-detail">Run <code>python evaluate_models.py</code> in the terminal to compile model metrics, then reload.</div>
+    </div>
+  {% else %}
+
+  <section class="glass-panel">
+    <div class="panel-head">
+      <h3 class="panel-heading">Verification Architecture &amp; Data Flow</h3>
+      <p class="panel-sub">Multi-stage pipeline that ties subjective human manager ratings back to verifiable task parameters.</p>
+    </div>
+    <div class="methodology-steps-row">
+      <div class="step-card">
+        <div class="step-marker">01.</div>
+        <div class="step-card-title">Manager Human Review</div>
+        <p class="step-card-desc">Supervisors evaluate completed deliverables, awarding 1–5 stars and entering qualitative remarks.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-marker">02.</div>
+        <div class="step-card-title">Model Serialization</div>
+        <p class="step-card-desc">Trained estimators (<code>rating_model.pkl</code>, <code>anomaly_model.pkl</code>) load into memory for fast evaluation.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-marker">03.</div>
+        <div class="step-card-title">Fact-Based Rating Check</div>
+        <p class="step-card-desc">Model 2 estimates expected rating strictly from timeliness and milestone facts. Flags variance &ge; {{ m.model2.flag_threshold }}.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-marker">04.</div>
+        <div class="step-card-title">Distribution &amp; Tone Audit</div>
+        <p class="step-card-desc">Model 3 checks for supervisor skew. Model 4 confirms comment sentiment aligns with awarded rating.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-marker">05.</div>
+        <div class="step-card-title">Executive Synthesis</div>
+        <p class="step-card-desc">Weighted scoring formula compiles employee index; deterministic report generator writes transparent briefings.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="glass-panel">
+    <div class="panel-head">
+      <h3 class="panel-heading">Benchmark Training Corpus</h3>
+      <p class="panel-sub">Verified historical training dataset (<code>{{ m.dataset.file }}</code>).</p>
+    </div>
+    <div class="glass-kpi-ribbon">
+      <div class="glass-kpi-card">
+        <div class="kpi-num-tag">01.</div>
+        <div class="kpi-title">HISTORICAL TASKS</div>
+        <div class="kpi-number mono-data">{{ "{:,}".format(m.dataset.rows) }}</div>
+        <div class="kpi-subtext">Total verified records</div>
+      </div>
+      <div class="glass-kpi-card">
+        <div class="kpi-num-tag">02.</div>
+        <div class="kpi-title">EMPLOYEES</div>
+        <div class="kpi-number mono-data">{{ m.dataset.employees }}</div>
+        <div class="kpi-subtext">Tracked workforce members</div>
+      </div>
+      <div class="glass-kpi-card">
+        <div class="kpi-num-tag">03.</div>
+        <div class="kpi-title">SUPERVISORS</div>
+        <div class="kpi-number mono-data">{{ m.dataset.managers }}</div>
+        <div class="kpi-subtext">Department managers audited</div>
+      </div>
+      <div class="glass-kpi-card alert-card">
+        <div class="kpi-num-tag">04.</div>
+        <div class="kpi-title">SYNTHETIC OUTLIERS</div>
+        <div class="kpi-number mono-data text-crimson">{{ m.dataset.suspicious_pct }}%</div>
+        <div class="kpi-subtext">Planted test discrepancies ({{ m.dataset.suspicious_reviews }})</div>
+      </div>
+    </div>
+    <p class="corpus-footnote">Corpus Timespan: {{ m.dataset.date_from }} to {{ m.dataset.date_to }} &middot; {{ m.dataset.note }}</p>
+  </section>
+
+  <div class="model-cards-layout">
+    <div class="glass-model-card">
+      <div class="model-badge-top">
+        <span class="glass-tag tag-approved">Model 01 &middot; Formula</span>
+      </div>
+      <h3 class="model-box-title">Performance Index</h3>
+      <p class="model-box-sub">{{ m.model1.algorithm }}</p>
+      <table class="glass-kv-table">
+        {% for k, v in m.model1.weights.items() %}
+        <tr>
+          <td>{{ k }}</td>
+          <td class="mono-data">{{ v }}%</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <div class="glass-model-card">
+      <div class="model-badge-top">
+        <span class="glass-tag tag-approved">Model 02 &middot; Trained</span>
+      </div>
+      <h3 class="model-box-title">Fact-Based Rating Estimator</h3>
+      <p class="model-box-sub">{{ m.model2.algorithm }} &middot; {{ m.model2.trees }} Decision Trees</p>
+      <table class="glass-kv-table">
+        <tr>
+          <td>Train / Test Split</td>
+          <td class="mono-data">{{ "{:,}".format(m.model2.train_rows) }} / {{ "{:,}".format(m.model2.test_rows) }}</td>
+        </tr>
+        <tr>
+          <td>Mean Absolute Error (MAE)</td>
+          <td class="mono-data text-cobalt">{{ m.model2.mae }} stars</td>
+        </tr>
+        <tr>
+          <td>Precision Rate</td>
+          <td class="mono-data text-teal">{{ m.model2.precision }}%</td>
+        </tr>
+        <tr>
+          <td>Recall Rate</td>
+          <td class="mono-data">{{ m.model2.recall }}%</td>
+        </tr>
+        <tr>
+          <td>Harmonic F1 Score</td>
+          <td class="mono-data text-cobalt">{{ m.model2.f1 }}%</td>
+        </tr>
+        <tr>
+          <td>Outlier Flag Gap</td>
+          <td class="mono-data">&ge; {{ m.model2.flag_threshold }} stars</td>
+        </tr>
+        <tr>
+          <td>Serialized Model</td>
+          <td><code class="code-pill">rating_model.pkl</code></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="glass-model-card">
+      <div class="model-badge-top">
+        <span class="glass-tag tag-approved">Model 03 &middot; Trained</span>
+      </div>
+      <h3 class="model-box-title">Review Distribution Audit</h3>
+      <p class="model-box-sub">{{ m.model3.algorithm }} &middot; {{ m.model3.trees }} Trees</p>
+      <table class="glass-kv-table">
+        <tr>
+          <td>Entities Checked</td>
+          <td class="mono-data">{{ m.model3.managers_checked }} Mgrs / {{ m.model3.employees_checked }} Emps</td>
+        </tr>
+        <tr>
+          <td>Flagged Supervisors</td>
+          <td><strong class="text-crimson mono-data">{{ m.model3.flagged_managers|join(', ') or 'None' }}</strong></td>
+        </tr>
+        <tr>
+          <td>Outlier Employees</td>
+          <td class="mono-data">{{ m.model3.flagged_employees|length }}</td>
+        </tr>
+        <tr>
+          <td>Planted Lazy Manager ({{ m.model3.planted_lazy_manager }}) Caught</td>
+          <td class="mono-data text-teal">{{ 'Verified' if m.model3.lazy_manager_found else 'Missed' }}</td>
+        </tr>
+        <tr>
+          <td>Planted Biased Case ({{ m.model3.planted_biased_employee }}) Caught</td>
+          <td class="mono-data text-teal">{{ 'Verified' if m.model3.biased_employee_found else 'Missed' }}</td>
+        </tr>
+        <tr>
+          <td>Serialized Model</td>
+          <td><code class="code-pill">anomaly_model.pkl</code></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="glass-model-card">
+      <div class="model-badge-top">
+        <span class="glass-tag tag-approved">Model 04 &middot; NLP</span>
+      </div>
+      <h3 class="model-box-title">Review Tone Coherence</h3>
+      <p class="model-box-sub">{{ m.model4.algorithm }}</p>
+      <table class="glass-kv-table">
+        <tr>
+          <td>Baseline Accuracy</td>
+          <td class="mono-data text-teal">{{ m.model4.accuracy_normal }}%</td>
+        </tr>
+        <tr>
+          <td>Comment/Score Mismatches</td>
+          <td class="mono-data text-amber">{{ m.model4.mismatches }}</td>
+        </tr>
+        <tr>
+          <td>Planted Outliers Caught</td>
+          <td class="mono-data">{{ m.model4.suspicious_caught }} of {{ m.model4.suspicious_total }}</td>
+        </tr>
+      </table>
+      <p class="model-card-note">{{ m.model4.note }}</p>
+    </div>
+
+    <div class="glass-model-card">
+      <div class="model-badge-top">
+        <span class="glass-tag tag-approved">Model 05 &middot; Synthesis</span>
+      </div>
+      <h3 class="model-box-title">Executive Briefing Generator</h3>
+      <p class="model-box-sub">{{ m.model5.algorithm }}</p>
+      <p class="model-card-note">{{ m.model5.note }} Deterministic templates ensure full compliance, explainability, and preserve ultimate human decision authority.</p>
+    </div>
+  </div>
+
+  <section class="glass-panel">
+    <div class="panel-head">
+      <h3 class="panel-heading">Model 2 Feature Importance Weights</h3>
+      <p class="panel-sub">Mathematical weighting of each deliverable parameter in predicting expected quality rating.</p>
+    </div>
+    <div class="chart-canvas-wrap"><canvas id="cImp"></canvas></div>
+  </section>
+
+  <section class="glass-panel">
+    <div class="panel-head flex-between">
+      <div>
+        <h3 class="panel-heading">In-Database Model Retraining</h3>
+        <p class="panel-sub">Retrain Models 2 and 3 on real production reviews saved in the database.</p>
+      </div>
+      <form method="post" action="{{ url_for('ceo_retrain') }}" onsubmit="this.querySelector('button').textContent='Retraining...'">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-cobalt-cta" type="submit">
+          <svg viewBox="0 0 16 16" fill="none" width="13" height="13" aria-hidden="true">
+            <path d="M14 8A6 6 0 118 2v2a4 4 0 104 4h2z" fill="currentColor"/>
+          </svg>
+          <span>Retrain on Current Database</span>
+        </button>
+      </form>
+    </div>
+    {% if log %}
+    <div class="glass-table-wrapper">
+      <table class="glass-tbl">
+        <thead>
+          <tr>
+            <th>Training Timestamp</th>
+            <th>Database Reviews Used</th>
+            <th>Train / Test Samples</th>
+            <th>Mean Error (MAE)</th>
+            <th>Outliers in Test</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for l in log %}
+          <tr>
+            <td class="mono-data">{{ l.trained_at }}</td>
+            <td class="mono-data">{{ "{:,}".format(l.reviewed_rows) }}</td>
+            <td class="mono-data">{{ "{:,}".format(l.train_rows) }} / {{ "{:,}".format(l.test_rows) }}</td>
+            <td class="mono-data text-cobalt">{{ l.mae }} stars</td>
+            <td class="mono-data text-crimson">{{ l.flagged_pct }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-tertiary">No retraining runs recorded yet. System currently operating on primary baseline checkpoint.</p>
+    {% endif %}
+  </section>
+
+  <div class="methodology-footer-meta">
+    Report Compiled: <span class="mono-data">{{ m.generated_at }}</span> &middot; Runtime: <span class="mono-data">Python {{ m.versions.python }}</span> &middot; scikit-learn: <span class="mono-data">{{ m.versions.scikit_learn }}</span>
+  </div>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+{% if m %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+  const IMP = {{ m.model2.importance|tojson }};
+  const labels = {
+    status_rejected: 'Task Rejected by Supervisor',
+    status_approved: 'Task Approved by Supervisor',
+    status_pending: 'Task Pending Review',
+    days_late: 'Days Late (Signed Duration)',
+    late_days_only: 'Days Late (Milestone Delay)',
+    is_late: 'Binary Late Indicator'
+  };
+
+  if (typeof Chart === 'undefined') {
+    document.getElementById('cImp').parentNode.innerHTML = '<p class="text-tertiary">Chart component requires network access.</p>';
+  } else {
+    Chart.defaults.font.family = '"Plus Jakarta Sans", system-ui, sans-serif';
+    Chart.defaults.font.size = 11;
+    Chart.defaults.color = '#595e78';
+    Chart.defaults.maintainAspectRatio = false;
+
+    const keys = Object.keys(IMP);
+    new Chart(document.getElementById('cImp'), {
+      type: 'bar',
+      data: {
+        labels: keys.map(k => labels[k] || k),
+        datasets: [{
+          data: keys.map(k => +(IMP[k] * 100).toFixed(1)),
+          backgroundColor: '#1800ad',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(12, 14, 36, 0.92)',
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+            borderWidth: 1,
+            titleColor: '#ffffff',
+            bodyColor: '#e2e8f0',
+            padding: 10,
+            cornerRadius: 6,
+            displayColors: false
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'Importance Weight Coefficient (%)', color: '#595e78' },
+            grid: { color: 'rgba(24, 0, 173, 0.06)' },
+            ticks: { color: '#595e78' }
+          },
+          y: {
+            grid: { display: false },
+            ticks: { color: '#0a0c20', font: { weight: '600' } }
+          }
+        }
+      }
+    });
+  }
+</script>
+{% endif %}
+{% endblock %}

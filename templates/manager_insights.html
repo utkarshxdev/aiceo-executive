@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+{% block title %}Team Performance Insights{% endblock %}
+{% block content %}
+  <div class="page-top-lead">
+    <div class="page-eyebrow">
+      <span class="eyebrow-tag">ANALYTICS &amp; VELOCITY</span>
+      <span class="eyebrow-sep">/</span>
+      <span class="eyebrow-sub">TEAM PERFORMANCE INSIGHTS</span>
+    </div>
+
+    <div class="header-main-group">
+      <h1 class="page-main-heading">Team Performance Analytics</h1>
+      <p class="page-sub-caption">Aggregate velocity, milestone punctuality, rating distribution, and direct report rankings.</p>
+    </div>
+  </div>
+
+  <div class="glass-kpi-ribbon">
+    <div class="glass-kpi-card">
+      <div class="kpi-num-tag">01.</div>
+      <div class="kpi-title">TEAM SCORE INDEX</div>
+      <div class="kpi-number mono-data text-cobalt">{{ d.team.score }}<span class="kpi-pct">/100</span></div>
+      <div class="kpi-subtext">Weighted aggregate rating</div>
+    </div>
+    <div class="glass-kpi-card">
+      <div class="kpi-num-tag">02.</div>
+      <div class="kpi-title">APPROVAL RATE</div>
+      <div class="kpi-number mono-data text-teal">{{ d.team.completion_pct }}%</div>
+      <div class="kpi-subtext">Validated &amp; approved tasks</div>
+    </div>
+    <div class="glass-kpi-card">
+      <div class="kpi-num-tag">03.</div>
+      <div class="kpi-title">PUNCTUALITY RATE</div>
+      <div class="kpi-number mono-data">{{ d.team.on_time_pct }}%</div>
+      <div class="kpi-subtext">Completed on or before deadline</div>
+    </div>
+    <div class="glass-kpi-card">
+      <div class="kpi-num-tag">04.</div>
+      <div class="kpi-title">MEAN QUALITY SCORE</div>
+      <div class="kpi-number mono-data">{{ d.team.avg_rating }} <span class="stars-gold">★</span></div>
+      <div class="kpi-subtext">5-point evaluation scale</div>
+    </div>
+    <div class="glass-kpi-card alert-card">
+      <div class="kpi-num-tag">05.</div>
+      <div class="kpi-title">AWAITING AUDIT</div>
+      <div class="kpi-number mono-data text-amber">{{ d.team.pending }}</div>
+      <div class="kpi-subtext">Pending supervisor review</div>
+    </div>
+  </div>
+
+  <div class="glass-panel-split">
+    <section class="glass-panel">
+      <div class="panel-head">
+        <h3 class="panel-heading">Task Status Breakdown</h3>
+        <p class="panel-sub">Proportion of approved, pending, and rejected deliverables.</p>
+      </div>
+      <div class="chart-canvas-wrap"><canvas id="cStatus"></canvas></div>
+    </section>
+
+    <section class="glass-panel">
+      <div class="panel-head">
+        <h3 class="panel-heading">Rating Distribution Histogram</h3>
+        <p class="panel-sub">Volume of deliverables across 1-star to 5-star ratings.</p>
+      </div>
+      <div class="chart-canvas-wrap"><canvas id="cRatings"></canvas></div>
+    </section>
+
+    <section class="glass-panel wide">
+      <div class="panel-head">
+        <h3 class="panel-heading">Workforce Score Distribution</h3>
+        <p class="panel-sub">Individual composite scores indexed across all direct reports.</p>
+      </div>
+      <div class="chart-canvas-wrap tall"><canvas id="cEmployees"></canvas></div>
+    </section>
+
+    <section class="glass-panel wide">
+      <div class="panel-head">
+        <h3 class="panel-heading">Monthly Performance Trajectory</h3>
+        <p class="panel-sub">Rolling multi-month trends for on-time delivery, approval rate, and mean rating.</p>
+      </div>
+      <div class="chart-canvas-wrap tall"><canvas id="cTrend"></canvas></div>
+    </section>
+  </div>
+
+  <section class="glass-panel">
+    <div class="panel-head">
+      <h3 class="panel-heading">Team Performance Leaderboard</h3>
+      <p class="panel-sub">Ranked by weighted composite score.</p>
+    </div>
+    <div class="glass-table-wrapper">
+      <table class="glass-tbl">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Employee Profile</th>
+            <th>Composite Score</th>
+            <th>Approval Rate</th>
+            <th>On-Time Rate</th>
+            <th>Mean Rating</th>
+            <th>Pending Queue</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in d.leaderboard %}
+          <tr>
+            <td><span class="rank-circle rank-{{ loop.index if loop.index <= 3 else 'other' }}">{{ loop.index }}</span></td>
+            <td>
+              <a href="{{ url_for('manager_employee', emp_id=e.id) }}" class="emp-profile-link">
+                <span class="emp-main-name">{{ e.name }}</span>
+                <span class="emp-id-sub mono-data">{{ e.id }}</span>
+              </a>
+            </td>
+            <td><strong class="score-num mono-data">{{ e.score }}</strong></td>
+            <td class="mono-data">{{ e.completion_pct }}%</td>
+            <td class="mono-data">{{ e.on_time_pct }}%</td>
+            <td class="mono-data">{{ e.avg_rating }} ★</td>
+            <td>
+              {% if e.pending %}
+              <span class="glass-status status-warn">
+                <span class="pip pip-amber"></span> {{ e.pending }} pending
+              </span>
+              {% else %}
+              <span class="text-tertiary">0</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="glass-panel">
+    <div class="panel-head flex-between">
+      <div>
+        <h3 class="panel-heading">Individual Employee Deep Dive</h3>
+        <p class="panel-sub">Select an individual contributor to analyze multi-month trajectories.</p>
+      </div>
+      <select id="empSelect" class="glass-select">
+        {% for e in d.leaderboard %}
+        <option value="{{ e.id }}">{{ e.name }} ({{ e.id }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="glass-kpi-ribbon kpi-compact" id="indStats"></div>
+    <div class="chart-canvas-wrap tall"><canvas id="cIndividual"></canvas></div>
+  </section>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+  const D = {{ d|tojson }};
+  const C = {
+    cobalt: '#1800ad',
+    blue: '#0047ff',
+    teal: '#0d9488',
+    amber: '#d97706',
+    ruby: '#e11d48',
+    grid: 'rgba(24, 0, 173, 0.06)',
+    text: '#595e78'
+  };
+
+  if (typeof Chart === 'undefined') {
+    document.querySelectorAll('.chart-canvas-wrap').forEach(b => {
+      b.innerHTML = '<p class="text-tertiary">Chart component requires network access.</p>';
+    });
+  } else {
+    Chart.defaults.font.family = '"Plus Jakarta Sans", system-ui, sans-serif';
+    Chart.defaults.font.size = 11;
+    Chart.defaults.color = C.text;
+    Chart.defaults.maintainAspectRatio = false;
+
+    const monthLabels = D.monthly.map(m => m.month);
+
+    new Chart(document.getElementById('cStatus'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Approved', 'Pending', 'Rejected'],
+        datasets: [{
+          data: D.status,
+          backgroundColor: [C.teal, C.amber, C.ruby],
+          borderWidth: 3,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        cutout: '72%',
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 10, padding: 15, color: '#0a0c20', font: { weight: '600' } } }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('cRatings'), {
+      type: 'bar',
+      data: {
+        labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
+        datasets: [{
+          data: D.rating_counts,
+          backgroundColor: C.cobalt,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { grid: { color: C.grid }, ticks: { color: C.text } },
+          x: { grid: { display: false }, ticks: { color: '#0a0c20', font: { weight: '600' } } }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('cEmployees'), {
+      type: 'bar',
+      data: {
+        labels: D.leaderboard.map(e => e.id),
+        datasets: [{
+          label: 'Score Index',
+          data: D.leaderboard.map(e => e.score),
+          backgroundColor: C.blue,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { min: 0, max: 100, grid: { color: C.grid }, ticks: { color: C.text } },
+          x: { grid: { display: false }, ticks: { color: C.cobalt, font: { weight: '600' } } }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('cTrend'), {
+      type: 'line',
+      data: {
+        labels: monthLabels,
+        datasets: [
+          {
+            label: 'On-time Rate %',
+            data: D.monthly.map(m => m.on_time_pct),
+            borderColor: C.teal,
+            backgroundColor: C.teal,
+            borderWidth: 2,
+            tension: 0.25,
+            yAxisID: 'y'
+          },
+          {
+            label: 'Approval Rate %',
+            data: D.monthly.map(m => m.completion_pct),
+            borderColor: C.cobalt,
+            backgroundColor: C.cobalt,
+            borderWidth: 2,
+            tension: 0.25,
+            yAxisID: 'y'
+          },
+          {
+            label: 'Mean Rating (Right Axis)',
+            data: D.monthly.map(m => m.avg_rating),
+            borderColor: C.amber,
+            backgroundColor: C.amber,
+            borderWidth: 2,
+            tension: 0.25,
+            yAxisID: 'y2'
+          }
+        ]
+      },
+      options: {
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 10, padding: 15, color: '#0a0c20', font: { weight: '600' } } }
+        },
+        scales: {
+          y: { min: 0, max: 100, grid: { color: C.grid }, ticks: { color: C.text } },
+          y2: { position: 'right', min: 1, max: 5, grid: { display: false }, ticks: { color: C.text } },
+          x: { grid: { display: false }, ticks: { color: C.text } }
+        }
+      }
+    });
+
+    let indChart;
+    function showEmployee(id) {
+      const e = D.individual[id], s = e.stats;
+      document.getElementById('indStats').innerHTML =
+        [['Score', s.score], ['Approval Rate', s.completion_pct + '%'], ['On-Time', s.on_time_pct + '%'],
+         ['Mean Rating', s.avg_rating], ['Pending Tasks', s.pending]]
+        .map(([l, v], idx) => `
+          <div class="glass-kpi-card">
+            <div class="kpi-num-tag">0${idx + 1}.</div>
+            <div class="kpi-title">${l.toUpperCase()}</div>
+            <div class="kpi-number mono-data">${v}</div>
+          </div>
+        `).join('');
+
+      const data = {
+        labels: e.monthly.map(m => m.month),
+        datasets: [
+          { label: 'On-time %', data: e.monthly.map(m => m.on_time_pct), borderColor: C.teal, tension: 0.25, yAxisID: 'y' },
+          { label: 'Approval %', data: e.monthly.map(m => m.completion_pct), borderColor: C.cobalt, tension: 0.25, yAxisID: 'y' },
+          { label: 'Mean Rating', data: e.monthly.map(m => m.avg_rating), borderColor: C.amber, tension: 0.25, yAxisID: 'y2' }
+        ]
+      };
+
+      if (indChart) {
+        indChart.data = data;
+        indChart.update();
+        return;
+      }
+
+      indChart = new Chart(document.getElementById('cIndividual'), {
+        type: 'line',
+        data,
+        options: {
+          interaction: { mode: 'index', intersect: false },
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 15, color: '#0a0c20', font: { weight: '600' } } } },
+          scales: {
+            y: { min: 0, max: 100, grid: { color: C.grid }, ticks: { color: C.text } },
+            y2: { position: 'right', min: 1, max: 5, grid: { display: false }, ticks: { color: C.text } },
+            x: { grid: { display: false }, ticks: { color: C.text } }
+          }
+        }
+      });
+    }
+
+    const sel = document.getElementById('empSelect');
+    sel.addEventListener('change', () => showEmployee(sel.value));
+    showEmployee(sel.value);
+  }
+</script>
+{% endblock %}

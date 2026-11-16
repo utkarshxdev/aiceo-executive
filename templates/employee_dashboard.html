@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}My Deliverables{% endblock %}
+{% block content %}
+  <div class="page-top-lead">
+    <div class="page-eyebrow">
+      <span class="eyebrow-tag">CONTRIBUTOR CONSOLE</span>
+      <span class="eyebrow-sep">/</span>
+      <span class="eyebrow-sub">PERSONAL DELIVERABLES &amp; FEEDBACK</span>
+    </div>
+
+    <div class="header-main-group">
+      <h1 class="page-main-heading">My Deliverables &amp; Quality Feedback</h1>
+      <p class="page-sub-caption">Welcome, <strong class="text-ink">{{ session['name'] }}</strong>. All assigned milestones, supervisor evaluations, and constructive remarks appear below.</p>
+    </div>
+  </div>
+
+  <div class="glass-kpi-ribbon">
+    <div class="glass-kpi-card">
+      <div class="kpi-num-tag">01.</div>
+      <div class="kpi-title">PERFORMANCE SCORE</div>
+      <div class="kpi-number mono-data text-cobalt">{{ emp.score }}<span class="kpi-pct">/100</span></div>
+      <div class="kpi-subtext">Composite quality benchmark</div>
+    </div>
+    <div class="glass-kpi-card">
+      <div class="kpi-num-tag">02.</div>
+      <div class="kpi-title">TOTAL DELIVERABLES</div>
+      <div class="kpi-number mono-data">{{ emp.total }}</div>
+      <div class="kpi-subtext">Recorded tasks assigned</div>
+    </div>
+    <div class="glass-kpi-card">
+      <div class="kpi-num-tag">03.</div>
+      <div class="kpi-title">APPROVED</div>
+      <div class="kpi-number mono-data text-teal">{{ emp.approved }}</div>
+      <div class="kpi-subtext">Verified quality delivery</div>
+    </div>
+    <div class="glass-kpi-card alert-card">
+      <div class="kpi-num-tag">04.</div>
+      <div class="kpi-title">AWAITING REVIEW</div>
+      <div class="kpi-number mono-data text-amber">{{ emp.pending }}</div>
+      <div class="kpi-subtext">Pending supervisor audit</div>
+    </div>
+    <div class="glass-kpi-card critical-card">
+      <div class="kpi-num-tag">05.</div>
+      <div class="kpi-title">REJECTED</div>
+      <div class="kpi-number mono-data text-crimson">{{ emp.rejected }}</div>
+      <div class="kpi-subtext">Standards not reached</div>
+    </div>
+  </div>
+
+  <div class="filter-strip">
+    <div class="chips-container" id="chips">
+      <button class="glass-chip" data-f="all">All Deliverables</button>
+      <button class="glass-chip" data-f="pending">Pending Audit ({{ emp.pending }})</button>
+      <button class="glass-chip" data-f="approved">Approved</button>
+      <button class="glass-chip" data-f="rejected">Rejected</button>
+    </div>
+  </div>
+
+  {% if tasks %}
+  <div class="glass-panel">
+    <div class="glass-table-wrapper">
+      <table class="glass-tbl" id="tbl">
+        <thead>
+          <tr>
+            <th>Deliverable Title &amp; Ref</th>
+            <th>Target Deadline</th>
+            <th>Finished Date</th>
+            <th>Punctuality</th>
+            <th>Status</th>
+            <th>Quality Score</th>
+            <th>Supervisor Feedback Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in tasks %}
+          <tr data-status="{{ t.status }}">
+            <td>
+              <div class="task-cell-title">{{ t.title }}</div>
+              <span class="badge-chip">{{ t.task_id }}</span>
+            </td>
+            <td class="mono-data">{{ t.deadline }}</td>
+            <td class="mono-data">{{ t.finished }}</td>
+            <td>
+              <span class="delivery-indicator {{ 'late' if t.late else 'ontime' }}">{{ t.delivery }}</span>
+            </td>
+            <td>
+              <span class="glass-tag tag-{{ t.status }}">{{ t.status|capitalize }}</span>
+            </td>
+            <td>
+              {% if t.rating %}
+              <span class="stars-gold">{{ '★' * t.rating }}<span class="stars-faint">{{ '★' * (5 - t.rating) }}</span></span>
+              {% else %}
+              <span class="text-tertiary">Pending Review</span>
+              {% endif %}
+            </td>
+            <td class="comment-block">
+              {% if t.comment %}
+              <div class="comment-text">&ldquo;{{ t.comment }}&rdquo;</div>
+              {% else %}
+              <span class="text-tertiary">No evaluation comment recorded</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="glass-empty-card">
+    <div class="empty-icon-symbol">&#9634;</div>
+    <div class="empty-headline">No Deliverables Assigned</div>
+    <div class="empty-detail">Your department manager will assign tasks to your queue. Check back shortly.</div>
+  </div>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+  const chips = document.querySelectorAll('.glass-chip');
+  const rows = document.querySelectorAll('#tbl tbody tr');
+  function applyFilter(f) {
+    chips.forEach(c => c.classList.toggle('on', c.dataset.f === f));
+    rows.forEach(r => { r.style.display = (f === 'all' || r.dataset.status === f) ? '' : 'none'; });
+  }
+  chips.forEach(c => c.addEventListener('click', () => applyFilter(c.dataset.f)));
+  applyFilter({{ start_filter|tojson }});
+</script>
+{% endblock %}
