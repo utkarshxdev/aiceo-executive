@@ -44,9 +44,8 @@ MAX_COMMENT = 500
 SHOW_DEMO_LOGINS = os.environ.get("SHOW_DEMO_LOGINS", "1") == "1"
 
 app = Flask(__name__)
-# On a live site set SECRET_KEY in the environment. Without it a random key is used,
-# which works but logs everybody out whenever the app restarts.
-app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
+# On a live site set SECRET_KEY in the environment. Deterministic default for serverless lambdas
+app.secret_key = os.environ.get("SECRET_KEY") or "aiceo-executive-secure-cookie-key-2026-production-token"
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,   # JavaScript cannot read the login cookie
     SESSION_COOKIE_SAMESITE="Lax",  # extra protection against cross-site requests
